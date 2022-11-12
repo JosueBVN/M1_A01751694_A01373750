@@ -4,7 +4,7 @@ from mesa.visualization.modules import CanvasGrid
 from mesa.visualization.UserParam import UserSettableParameter
 
 from Agent import *
-from Model import CleanModel
+from Model import CleaningModel
 
 """
 Autor: Josué Bernardo Villegas Nuño 
@@ -21,8 +21,8 @@ SIZE_OF_CANVAS_IN_PIXELS_Y = 500
 NUMBER_OF_CELLS = 20
 
 COLORS = {
-    "Clean":"#5bfa05",
-    "Dirty":"#ac6420"
+    "Limpio":"blue",
+    "Sucio":"red"
 }
 
 simulationParams = {
@@ -61,21 +61,22 @@ def roomba_Floor_Portrayal(agent):
         return
     
     portrayal = {}
-
-    if type(agent) is Robot:
+    if type(agent) is Superficie:
+        if agent.state == "Limpio":
+            portrayal["Shape"] = "circle"
+            portrayal["Layer"] = 0
+            portrayal["r"] = 0.2
+            portrayal["Color"] = "white"
+        else:
+            portrayal["Shape"] = "./images/Suciedad.png"
+            portrayal["Layer"] = 0
+            portrayal["Scale"] = 1
+    else:
         portrayal["Shape"] = "./images/roomba.png"
         portrayal["Scale"] = 20
         portrayal["Layer"] = 1
         
-    elif type(agent) is Floor and agent.state == "Clean":
-        portrayal["Shape"] = "circle"
-        portrayal["Layer"] = 0
-        portrayal["r"] = 0.2
-        portrayal["Color"] = "white"
-    elif type(agent) is Floor and agent.state == "Dirty":
-        portrayal["Shape"] = "./images/Suciedad.png"
-        portrayal["Layer"] = 0
-        portrayal["Scale"] = 1
+
         
     return portrayal
 
@@ -90,9 +91,9 @@ floorChart = ChartModule(
 
 
 grid = CanvasGrid(roomba_Floor_Portrayal,NUMBER_OF_CELLS, NUMBER_OF_CELLS,SIZE_OF_CANVAS_IN_PIXELS_X,SIZE_OF_CANVAS_IN_PIXELS_Y)
-server = ModularServer(CleanModel,
+server = ModularServer(CleaningModel,
                         [grid,floorChart],
-                        "Clean Model",
+                        "Robot limpiadores",
                         simulationParams)
 server.port = 15200
 server.launch()

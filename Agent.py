@@ -7,90 +7,67 @@ Autor: Jose Miguel Garcia Gurtubay moreno
 Matricula: A01373750
 Robot limpiador
 11 Octubre del 2022
+
+El agente superficie que puede estar limpio o sucio en cada casilla del ambiente
 """
-
-class Robot(Agent):
-    """
-    Robo
-    """
-
-    def  __init__(self, unique_id, model):
-        """
-        Constructor de Agente Roomba
-        """
-
-        super(). __init__(unique_id, model)
-    
-    def step(self) -> None:
-        """
-        Funcion que dicta que hacer en cada tick o step
-        Si Roomba se encuetra en una casilla sucia, llama a la funcion para limpiar
-        En caso de que no se encuentre en una casilla sucia, llama a la funcion para moverse
-        """
-        
-        contents = self.model.grid.get_cell_list_contents([self.pos])
-        
-        for i in contents:
-            if type(i) == Floor:
-                floor = i
-                break
-       
-
-        if floor.state == "Dirty":
-            
-            self.clean(floor)
-        else:
-            
-            
-            self.move(floor)
-        
-        
-
-    def move(self,floor) -> None:
-        """
-        Roomba elije 1 de sus 8 posibles casillas para moverse
-        Si la celda que elijió ya se encuentra otra Roomba, permanece en su lugar
-        """
-        possibleSteps = self.model.grid.get_neighborhood(
-            self.pos, moore=True,include_center=False
-        )
-        newPosition = self.random.choice(possibleSteps)
-        
-        contents = self.model.grid.get_cell_list_contents(newPosition)
-        
-        c = 0
-        """Todo lo que"""
-        print("----------------------")
-        for i in contents:
-            print(type(i) == type(self))
-            if type(i) == type(self):
-                c = 1
-                break
-        
-        print("-----------------------")
-        if c == 1:
-            pass
-        else:
-            self.model.grid.move_agent(self,newPosition)
-        
-        
-
-    def clean(self,floorAgent):
-        """
-        Roomba permanece en su lugar y limpia el suelo
-        """
-        floorAgent.state = "Clean"
-
-class Floor(Agent):
-    """
-    Suelo que tiene 2 estados
-    Clean: El suelo esta limpio
-    Dirty: El suelo esta sucio
-    """
-
+class Superficie(Agent):
     def __init__(self, pos, model):
         super().__init__(pos, model)
-        self.state = "CLEAN"
+        self.state = "Limpio"
         self.pos = pos
     def step(self):
         pass
+"""
+Clase Agente Robot
+"""
+class Robot(Agent):
+    """Contructor de la clase Robot"""
+    def  __init__(self, unique_id, model):
+        super(). __init__(unique_id, model)
+
+    """
+    Esta funcion determina el comportamineto del agente robot,
+    condicionada por la interaccion con el agente que determina si el piso esta sucio o limpio.
+    """
+    def step(self) -> None:
+        valoresGrilla = self.model.grid.get_cell_list_contents([self.pos])       
+        for i in valoresGrilla:
+            if type(i) == Superficie:
+                superficie = i
+                break      
+            ##Aqui invertir 
+        if superficie.state == "Limpio":            
+            self.move(superficie)
+        else:                        
+            self.clean(superficie)
+        
+        
+    """
+    El Robot se mueve a una de las casillas adyacentes, a menos que encuentre otro robot.
+    """
+    def move(self,superficie) -> None:
+
+        possible_steps = self.model.grid.get_neighborhood(
+            self.pos, moore=True,include_center=False
+        )
+        new_position = self.random.choice(possible_steps)
+        
+        valoresGrilla = self.model.grid.get_cell_list_contents(new_position)
+        
+        op = 0
+        """Todo lo que se imprima fuera"""
+        for i in valoresGrilla:
+            if type(i) == Robot:
+                op = 1
+                break
+        if op == 1:
+            pass
+        else:
+            self.model.grid.move_agent(self,new_position)
+        
+        
+    """
+    El robot limpia y se cambia el estado de la superficie
+    """
+    def clean(self,superficieAgent):
+        superficieAgent.state = "Limpio"
