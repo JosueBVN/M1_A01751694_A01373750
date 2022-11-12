@@ -1,46 +1,83 @@
-import mesa
+from mesa import DataCollector
+from mesa import Model
+from Agent import *
+from mesa.time import RandomActivation
+from mesa.space import MultiGrid
 
-from Agente import CleanRobot
+"""
+Autor: Josué Bernardo Villegas Nuño 
+Matricula: A01751694
+Autor: Jose Miguel Garcia Gurtubay moreno
+Matricula: A01373750
+Robot limpiador
+11 Octubre del 2022
+"""
 
 
-def get_happy_agents(model):
+class CleanModel(Model):
     """
-    Display a text count of how many happy agents there are.
+    A model with some dirty floor and roombas to clean
+    
     """
-    return f"Happy agents: {model.happy}"
 
+    def __init__(self,numberOfAgents,dirtPercentaje,width,height,maxSteps):
+        self.numAgents = numberOfAgents
+        self.grid = MultiGrid(width, height, False)
+        self.schedule = RandomActivation(self)
+        self.running = True
+        self.dirtPercentaje = int(dirtPercentaje*(width*height))
+        self.maxSteps = maxSteps
+        self.courrentSteps = 0
 
-def schelling_draw(agent):
-    """
-    Portrayal Method for canvas
-    """
-    if agent is None:
-        return
-    portrayal = {"Shape": "circle", "r": 0.5, "Filled": "true", "Layer": 0}
+        #Data Collector
+        self.datacollector = DataCollector(
+            {
+                "Clean": lambda m: self.count_type(m,"Clean"),
+                "Dirty": lambda m: self.count_type(m,"Dirty")
+            }
+        )
+        
+        fList = []
+        #Create Floor
+        for (contents,x,y) in self.grid.coord_iter():
+            f = Floor((x,y), self)
+            self.grid.place_agent(f, (x,y))
+            fList.append(f)
+            self.schedule.add(f)
+        
+        #Change state to dirty floor
+        dFloor = self.random.sample(list(fList),self.dirtPercentaje)
+        
+        for a in dFloor:
+            a.state = "Dirty"
 
-    if agent.type == 0:
-        portrayal["Color"] = ["#FF0000", "#FF9999"]
-        portrayal["stroke_color"] = "#00FF00"
-    else:
-        portrayal["Color"] = ["#0000FF", "#9999FF"]
-        portrayal["stroke_color"] = "#000000"
-    return portrayal
+        #Create Agents
 
+        for i in range(self.numAgents):
+            a = Robot(i, self)
+            self.schedule.add(a)
 
-canvas_element = mesa.visualization.CanvasGrid(schelling_draw, 20, 20, 500, 500)
-happy_chart = mesa.visualization.ChartModule([{"Label": "happy", "Color": "Black"}])
+            #Add agent to grid
+            self.grid.place_agent(a, (1,1))
+    def step(self):
+        print(f"Actual steps : {self.courrentSteps}, max {self.maxSteps}")
+        if self.courrentSteps <= self.maxSteps:
 
-model_params = {
-    "height": 20,
-    "width": 20,
-    "density": mesa.visualization.Slider("Agent density", 0.8, 0.1, 1.0, 0.1),
-    "minority_pc": mesa.visualization.Slider("Fraction minority", 0.2, 0.00, 1.0, 0.05),
-    "homophily": mesa.visualization.Slider("Homophily", 3, 0, 8, 1),
-}
+            self.schedule.step()
+            self.courrentSteps += 1
+            
+            self.datacollector.collect(self)
+        else:
+            print("Finish")
+            self.running = False
+    @staticmethod
+    def count_type(model,floorCondition):
+        
 
-server = mesa.visualization.ModularServer(
-    CleanRobot,
-    [canvas_element, get_happy_agents, happy_chart],
-    "Schelling",
-    model_params,
-)
+        count = 0
+        for agent in model.schedule.agents:
+            if type(agent) == Floor:
+                if agent.state == floorCondition:
+                    count+=1
+            
+        return count
