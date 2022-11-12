@@ -55,7 +55,8 @@ class Robot(Agent):
         valoresGrilla = self.model.grid.get_cell_list_contents(new_position)
         
         op = 0
-        """Todo lo que se imprima fuera"""
+        
+        
         for i in valoresGrilla:
             if type(i) == Robot:
                 op = 1

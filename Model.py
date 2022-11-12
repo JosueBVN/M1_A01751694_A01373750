@@ -28,7 +28,7 @@ class CleaningModel(Model):
         self.maxSteps = maxSteps
         self.courrentSteps = 0
 
-        #Data Collector
+        
         self.datacollector = DataCollector(
             {
                 "Limpio": lambda m: self.count_type(m,"Limpio"),
@@ -37,25 +37,25 @@ class CleaningModel(Model):
         )
         
         List = []
-        #Create Superficie
+        
         for (contents,x,y) in self.grid.coord_iter():
             punto = Superficie((x,y), self)
             self.grid.place_agent(punto, (x,y))
             List.append(punto)
             self.schedule.add(punto)
         
-        #Change state to dirty floor
+        
         sucioSuperficie = self.random.sample(list(List),self.dirtPercentaje)
         
         for i in sucioSuperficie:
             i.state = "Sucio"
 
-        #Create Agents
-
+        
+        
         for i in range(self.numAgents):
             nuevoRo = Robot(i, self)
             self.schedule.add(nuevoRo)
-            #Add agent to grid
+        
             self.grid.place_agent(nuevoRo, (1,1))
   
 
